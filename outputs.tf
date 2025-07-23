@@ -7,6 +7,6 @@ output "ssh_command" {
 }
 
 output "url" {
-  value = "http://${aws_instance.ssrf_server.public_ip}:3000?url="
+  value = "http://${aws_instance.ssrf_server.public_ip}:3000"
 }
 
