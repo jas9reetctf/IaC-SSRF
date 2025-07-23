@@ -10,6 +10,7 @@ pipeline {
         AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
         AWS_DEFAULT_REGION    = 'us-east-1'
+        TERRAFORM_VERSION = '1.8.4'
     }
 
     stages {
@@ -18,14 +19,24 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/jas9reetctf/IaC-SSRF.git'
             }
         }
+        stage('Install Terraform') {
+            steps {
+                sh '''
+                    curl -fsSL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o terraform.zip
+                    unzip -o terraform.zip
+                    mv terraform /usr/local/bin/
+                    terraform -version -no-color
+                    '''
+            }
+        }
         stage('Terraform init') {
             steps {
-                sh 'terraform init'
+                sh 'terraform init -no-color'
             }
         }
         stage('Plan') {
             steps {
-                sh 'terraform plan -out tfplan'
+                sh 'terraform plan -out tfplan -no-color'
                 sh 'terraform show -no-color tfplan > tfplan.txt'
             }
         }
@@ -39,9 +50,9 @@ pipeline {
                             parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                         }
 
-                        sh 'terraform ${action} -input=false tfplan'
+                        sh 'terraform ${action} -input=false tfplan -no-color'
                     } else if (params.action == 'destroy') {
-                        sh 'terraform ${action} --auto-approve'
+                        sh 'terraform ${action} --auto-approve -no-color'
                     } else {
                         error "Invalid action selected. Please choose either 'apply' or 'destroy'."
                     }
